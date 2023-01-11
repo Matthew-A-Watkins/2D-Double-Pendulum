@@ -1,5 +1,6 @@
+import math
 import sys
-
+import numpy as np
 import pygame
 
 # GLOBAL VARIABLES
@@ -15,17 +16,22 @@ HEIGHT = 1000
 # as a renderer
 class Pendulum:
 
-    def __init__(self, color, window, height=100, width=20, gravity=False):
+    # everything is in SI units (kg, Meters, seconds...)
+    # angle in radians
+    def __init__(self, color, window, height=100, width=20, gravity=True, mass=5, angle=0):
         self.color = color
         self.height = height
         self.width = width
         self.window = window
-
+        self.angle = angle
+        self.mass = mass
+        self.gravity = gravity
         self.x = int(WIDTH / 2) - width/2
         self.y = int(HEIGHT / 2) - height
     def draw(self):
-        rect = pygame.Rect(self.x, self.y, self.width, self.height)
-        pygame.draw.rect(self.window, self.color, rect)
+        print(self.x, self.y)
+        pygame.draw.line(self.window, self.color, (self.x, self.y),
+                         (self.x+self.width*np.sin(self.angle), self.y+self.height*np.cos(self.angle)), self.width)
 
     def move(self, new_pos: tuple):
         self.x += new_pos[0]
@@ -50,8 +56,6 @@ def main():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-
-
 
         for obj in pends:
             obj.draw()
