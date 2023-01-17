@@ -12,9 +12,38 @@ YELLOW = (255, 255, 0)
 WIDTH = 1000
 HEIGHT = 500
 
+class Point:
 
-# instead of using sprite class, I decided that I wanted to go an alternative route with simply using pygame
-# as a renderer
+    def __int__(self, x, y, vx, vy, vw, theta):
+        self.x = x
+        self.y = y
+        self.vx = vx
+        self.vy = vy
+        self.vw = vw
+        self.theta = theta
+
+
+
+class Object:
+    def __init__(self, objs:list):
+        self.objs = objs
+
+    def move(self, vx, vy, vw):
+        total_vx = 0
+        total_vy = 0
+        total_vw = 0
+
+        for obj in self.objs:
+            total_vx += obj.vx
+            total_vy += obj.vy
+            total_vw += obj.vw
+
+        total_vx += vx
+        total_vy += vy
+        total_vw += vw
+
+
+
 def main():
     pygame.init()
 
