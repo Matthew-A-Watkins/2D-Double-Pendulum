@@ -1,95 +1,90 @@
-import os
-import sys
-import numpy as np
 import pygame
+import numpy as np
+import sys
 
-# GLOBAL VARIABLES
-RED = (255, 0, 0)
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-YELLOW = (255, 255, 0)
+import time
 
-WIDTH = 1000
-HEIGHT = 500
+class pend():
+    def __init__(self, th1, th2, color):
+
+        self.L1 = 100  # length of the first pendulum arm
+        self.L2 = 100  # length of the second pendulum arm
+        self.M1 = 10   # mass of the first pendulum
+        self.M2 = 10   # mass of the second pendulum
+        self.G = 9.81  # gravitational constant
+        self.dt = .1   # time step
+
+        self.th1 = th1  # initial angle of the first pendulum
+        self.th2 = th2  # initial angle of the second pendulum
+        self.w1 = 0         # initial angular velocity of the first pendulum
+        self.w2 = 0         # initial angular velocity of the second pendulum
+
+        self.color = color # color of pendulum
+    def calculate_new_positions(self):
+
+        # calculate the angular accelerations
+        num1 = -self.G*(2*self.M1 + self.M2)*np.sin(self.th1) - self.M2*self.G*np.sin(self.th1 - 2*self.th2) - 2*np.sin(self.th1 - self.th2)*self.M2*(self.w2**2*self.L2 + self.w1**2*self.L1*np.cos(self.th1 - self.th2))
+        den1 = self.L1*(2*self.M1 + self.M2 - self.M2*np.cos(2*self.th1 - 2*self.th2))
+        alpha1 = num1 / den1
+
+        num2 = 2*np.sin(self.th1 - self.th2)*(self.w1**2*self.L1*(self.M1 + self.M2) + self.G*(self.M1 + self.M2)*np.cos(self.th1) + self.w2**2*self.L2*self.M2*np.cos(self.th1 - self.th2))
+        den2 = self.L2*(2*self.M1 + self.M2 - self.M2*np.cos(2*self.th1 - 2*self.th2))
+        alpha2 = num2 / den2
+
+        # update the angular velocities and angles
+        self.w1 = self.w1 + alpha1*self.dt
+        self.w2 = self.w2 + alpha2*self.dt
+        self.th1 = self.th1 + self.w1*self.dt
+        self.th2 = self.th2 + self.w2*self.dt
+
+        return self.th1, self.th2, self.w1, self.w2
+
+    def draw_pendulums(self, screen, th1, th2, L1, L2, color):
+        x1 = L1*np.sin(th1)
+        y1 = L1*np.cos(th1)
+        x2 = x1 + L2*np.sin(th2)
+        y2 = y1 + L2*np.cos(th2)
+
+        pygame.draw.line(screen, color, (400, 200), (400 + int(x1), 200 + int(y1)), 2)
+        pygame.draw.line(screen, color, (400 + int(x1), 200 + int(y1)), (400 + int(x2), 200 + int(y2)), 2)
+        pygame.draw.circle(screen, color, (400, 200), 5)
+        pygame.draw.circle(screen, color, (400 + int(x1), 200 + int(y1)), 5)
+        pygame.draw.circle(screen, color, (400 + int(x2), 200 + int(y2)), 5)
 
 
-class MyPoint:
-    def __init__(self, x, y, vx, vy, vw, theta):
-        self.x = x
-        self.y = y
-        self.vx = vx
-        self.vy = vy
-        self.vw = vw
-        self.theta = theta
+    def draw(self):
+        # calculate the new positions of the pendulums
+        th1, th2, w1, w2 = self.calculate_new_positions()
+        # draw the pendulums on the screen
+        self.draw_pendulums(screen, th1, th2, self.L1, self.L2, self.color)
 
+screen = pygame.display.set_mode((800, 450))
 
-class Object:
-    def __init__(self, objs: list):
-        self.objs = objs
+pends = []
+a = 0
+b = 0
+for i in range(100):
+    pends.append(pend(np.pi/2+a, np.pi/2+a, (b, int(b*0.5), b*2)))
+    if b>=100:
+        b = 0
+    b+=5
+    print(b)
+    a+=0.00001
 
-    def move(self, vx, vy, vw):
-        total_vx = 0
-        total_vy = 0
-        total_vw = 0
-
-        for obj in self.objs:
-            total_vx += obj.vx
-            total_vy += obj.vy
-            total_vw += obj.vw
-
-        total_vx += vx
-        total_vy += vy
-        total_vw += vw
-    def draw(self, color, surface):
-        last_point = None
-        for point in self.objs:
-            print(last_point, point)
-            if last_point is not None:
-                print("drawing {} to {}".format(last_point, (point.x, point.y)))
-                pygame.draw.line(surface, color, last_point, (point.x, point.y), 5)
-            last_point = (point.x, point.y)
-
-
-def main():
-    pygame.init()
-
-    size = (WIDTH, HEIGHT)
-    screen = pygame.display.set_mode(size)
-
-    pygame.display.set_caption("2D-Physics-Engine")
-
-    clock = pygame.time.Clock()
-
-    while True:
-        obj = Object([MyPoint(WIDTH/2, HEIGHT/2, 0, 0, 0, 0), MyPoint(10, 10, 0, 0, 0, 0)])
-        try:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
-
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE or event.key == pygame.K_SPACE:
-                        print("EXIT KEY PRESSED")
-                        pygame.quit()
-                        sys.exit()
-
-            screen.fill(BLACK)
-
-            obj.draw(WHITE, screen)
-
-            pygame.display.flip()
-
-            clock.tick(60)
-
-        # I hated having to force quit windows when an error appeared
-        except Exception as e:
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            print(exc_type, fname, exc_tb.tb_lineno)
-            pygame.quit()
+while True:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
             sys.exit()
 
 
-if __name__ == '__main__':
-    main()
+    # clear screen
+    screen.fill((0, 0, 0))
+
+
+    for p in pends:
+        p.calculate_new_positions()
+        p.draw()
+
+    # update the screen
+    pygame.display.flip()
+
