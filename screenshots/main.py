@@ -12,7 +12,7 @@ class pend():
         self.M1 = 10   # mass of the first pendulum
         self.M2 = 10   # mass of the second pendulum
         self.G = 9.81  # gravitational constant
-        self.dt = .1   # time step
+        self.dt = .01   # time step
 
         self.th1 = th1  # initial angle of the first pendulum
         self.th2 = th2  # initial angle of the second pendulum
@@ -47,9 +47,9 @@ class pend():
 
         pygame.draw.line(screen, color, (400, 200), (400 + int(x1), 200 + int(y1)), 2)
         pygame.draw.line(screen, color, (400 + int(x1), 200 + int(y1)), (400 + int(x2), 200 + int(y2)), 2)
-        pygame.draw.circle(screen, color, (400, 200), 5)
-        pygame.draw.circle(screen, color, (400 + int(x1), 200 + int(y1)), 5)
-        pygame.draw.circle(screen, color, (400 + int(x2), 200 + int(y2)), 5)
+        # pygame.draw.circle(screen, color, (400, 200), 5)
+        # pygame.draw.circle(screen, color, (400 + int(x1), 200 + int(y1)), 5)
+        # pygame.draw.circle(screen, color, (400 + int(x2), 200 + int(y2)), 5)
 
 
     def draw(self):
@@ -62,14 +62,14 @@ screen = pygame.display.set_mode((800, 450))
 
 pends = []
 a = 0
-b = 0
-for i in range(100):
-    pends.append(pend(np.pi/2+a, np.pi/2+a, (b, int(b*0.5), b*2)))
-    if b>=100:
-        b = 0
-    b+=5
-    print(b)
-    a+=0.00001
+
+for r in range(0, 255,4):
+    for g in range(0, 255,4):
+        pends.append(pend(np.pi / 2 + a, np.pi / 2 + a, (r, 0, g)))
+        a += 0.0001
+
+
+A = 0
 
 while True:
     for event in pygame.event.get():
@@ -80,11 +80,15 @@ while True:
     # clear screen
     screen.fill((0, 0, 0))
 
-
+    init_time = time.time()
     for p in pends:
         p.calculate_new_positions()
         p.draw()
 
+    print(time.time()-init_time)
+
+    pygame.image.save(screen, "frame_{}.jpeg".format(A))
+    A+=1
     # update the screen
     pygame.display.flip()
 
